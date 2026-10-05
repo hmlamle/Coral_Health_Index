@@ -7,13 +7,13 @@ library(readxl)
 library(tidyverse)
 
 # ---------------------- Time Point 1 Lookup Table -------------------------
-# Because this tp the data is messy (swapped names for tanks, etc)
+# Separate lookup because this tp the data is messy (swapped names for tanks, etc)
 ## ------------------------ Load data: ----------------------------------
 
-tp1_meta <- readxl::read_xlsx("C:\\Users\\hanna\\Florida International University\\Coral Reef Fisheries - 1. EPA_SEAGRANT Coral Spectral\\data\\raw\\OBJ1_Coral Color Experiment\\1. CORALS\\3. Reflectance\\TP1\\reflectance_metadata_long_TP1.xlsx")
+tp1_meta <- readxl::read_xlsx("data/reflectance_metadata_long_TP1.xlsx")
 
 tp1_files <- list.files(
-  path = "C:\\Users\\hanna\\OneDrive - Florida International University\\1.Research\\2.Bleaching_spectral_traits\\1.data\\Reflectance\\TP1",
+  path = "data/TP1",
   pattern = "\\.txt$",
   full.names = TRUE
 )
@@ -76,36 +76,36 @@ write.csv(tp1_metadata_final, "TP1_reflectance_lookup.csv")
 # ------------------------- All other TP's: ----------------------------
 ## ------------------------ Load data: ----------------------------------
 
-tp2_meta <- read_xlsx("C:\\Users\\hanna\\Florida International University\\Coral Reef Fisheries - 1. EPA_SEAGRANT Coral Spectral\\data\\raw\\OBJ1_Coral Color Experiment\\1. CORALS\\3. Reflectance\\TP2\\reflectance_metadata_long_TP2.xlsx")
+tp2_meta <- read_xlsx("data/reflectance_metadata_long_TP2.xlsx")
 
 tp2_files <- list.files(
-  path = "C:\\Users\\hanna\\OneDrive - Florida International University\\1.Research\\2.Bleaching_spectral_traits\\1.data\\Reflectance\\TP2",
+  path = "data/TP2",
   pattern = "\\.txt$",
   full.names = TRUE
 )
 
-tp3_meta <- read_xlsx("C:\\Users\\hanna\\Florida International University\\Coral Reef Fisheries - 1. EPA_SEAGRANT Coral Spectral\\data\\raw\\OBJ1_Coral Color Experiment\\1. CORALS\\3. Reflectance\\TP3\\reflectance_metadata_long_TP3.xlsx")
+tp3_meta <- read_xlsx("data/reflectance_metadata_long_TP3.xlsx")
 
 tp3_files <- list.files(
-  path = "C:\\Users\\hanna\\OneDrive - Florida International University\\1.Research\\2.Bleaching_spectral_traits\\1.data\\Reflectance\\TP3",
+  path = "data/TP3",
   pattern = "\\.txt$",
   full.names = TRUE
 )
 
 
-tp4_meta <- read_xlsx("C:\\Users\\hanna\\Florida International University\\Coral Reef Fisheries - 1. EPA_SEAGRANT Coral Spectral\\data\\raw\\OBJ1_Coral Color Experiment\\1. CORALS\\3. Reflectance\\TP4\\reflectance_metadata_long_TP4.xlsx")
+tp4_meta <- read_xlsx("data/reflectance_metadata_long_TP4.xlsx")
 
 tp4_files <- list.files(
-  path = "C:\\Users\\hanna\\OneDrive - Florida International University\\1.Research\\2.Bleaching_spectral_traits\\1.data\\Reflectance\\TP4",
+  path = "data/TP4",
   pattern = "\\.txt$",
   full.names = TRUE
 )
 
 
-tp5_meta <- read_xlsx("C:\\Users\\hanna\\Florida International University\\Coral Reef Fisheries - 1. EPA_SEAGRANT Coral Spectral\\data\\raw\\OBJ1_Coral Color Experiment\\1. CORALS\\3. Reflectance\\TP5\\reflectance_metadata_long_TP5.xlsx")
+tp5_meta <- read_xlsx("data/reflectance_metadata_long_TP5.xlsx")
 
 tp5_files <- list.files(
-  path = "C:\\Users\\hanna\\OneDrive - Florida International University\\1.Research\\2.Bleaching_spectral_traits\\1.data\\Reflectance\\TP5",
+  path = "data/TP5",
   pattern = "\\.txt$",
   full.names = TRUE
 )

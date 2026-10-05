@@ -96,7 +96,7 @@ tp1_qc <- tp1_spectra %>%
   filter(
     str_detect(
       fragment_ID,
-      regex("^(spectralon|skeleton)_", ignore_case = TRUE)
+      # regex("^(spectralon|skeleton)_", ignore_case = TRUE)
     )
   ) %>%
   mutate(
