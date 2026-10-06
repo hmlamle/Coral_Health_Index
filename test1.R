@@ -72,7 +72,6 @@ tank1_SNV_long <- tank1_SNV_df %>%
 ggplot(tank1_SNV_long, aes(x = wavelength, y = reflectance, group = interaction(fragment_ID, scan), color = fragment_ID)) +
   geom_line(alpha = 0.7) +
   theme_classic() +
-  facet_wrap(~ fragment_ID) +
   labs(
     title = "TP1 Reflectance — Tank 1",
     x = "Wavelength (nm)",
@@ -80,3 +79,16 @@ ggplot(tank1_SNV_long, aes(x = wavelength, y = reflectance, group = interaction(
   ) +
   theme(legend.position = "none")
 
+
+tank1_SNV_long %>%
+  filter(fragment_ID == "cave-ssid26-04162026", 
+         scan == 1,
+         wavelength >= 350,
+         wavelength <= 750) %>%
+  ggplot(aes(x = wavelength, y = reflectance)) +
+  geom_line() +
+  theme_classic() +
+  labs(
+    x = "Wavelength (nm)",
+    y = "Normalized Reflectance"
+  )
