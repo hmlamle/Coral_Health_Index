@@ -57,18 +57,50 @@ file_lookup <- file_lookup %>%
 ## --------------------- bind data  -------------------------------
 
 
+
 tp1_metadata_final <- tp1_meta %>%
   left_join(
     file_lookup,
     by = c("tank" = "tank_corrected", "order_in_tank")
   ) %>%
-  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) # remove circled rows, these were bad scans 
+  filter(
+    is.na(notes) |
+      !str_detect(notes, regex("circled", ignore_case = TRUE))
+  ) %>%
+  mutate(
+    # Use the calibration specified in notes, if present.
+    # Otherwise, default to the original standards for that tank.
+    spectralon_standard = coalesce(
+      str_extract(
+        notes,
+        regex("spectralon_tank\\d+(?:_calibration\\d+)?",
+              ignore_case = TRUE)
+      ),
+      paste0("spectralon_tank", tank)
+    ),
+    
+    # Match the skeleton standard to the Spectralon standard
+    skeleton_standard = str_replace(
+      spectralon_standard,
+      regex("^spectralon", ignore_case = TRUE),
+      "skeleton"
+    ),
+    
+    # Extract the calibration number, or label it "original"
+    calibration_id = coalesce(
+      str_extract(
+        spectralon_standard,
+        regex("calibration\\d+", ignore_case = TRUE)
+      ),
+      "original"
+    )
+  )
 
-
-
-
-
-write.csv(tp1_metadata_final, "TP1_reflectance_lookup.csv")
+write.csv(
+  tp1_metadata_final,
+  "TP1_reflectance_lookup.csv",
+  row.names = FALSE
+)
 
 
 
@@ -195,8 +227,37 @@ tp2_metadata_final <- tp2_meta %>%
     TP2_lookup,
     by = c("tank", "order_in_tank")
   ) %>%
-  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) # remove circled rows, these were bad scans 
-
+  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) %>% # remove circled rows, these were bad scans 
+  mutate(
+    # Use the calibration specified in notes, if present.
+    # Otherwise, default to the original standards for that tank.
+    spectralon_standard = coalesce(
+      str_extract(
+        notes,
+        regex("spectralon_tank\\d+(?:_calibration\\d+)?",
+              ignore_case = TRUE)
+      ),
+      paste0("spectralon_tank", tank)
+    ),
+    
+    # Match the skeleton standard to the Spectralon standard
+    skeleton_standard = str_replace(
+      spectralon_standard,
+      regex("^spectralon", ignore_case = TRUE),
+      "skeleton"
+    ),
+    
+    # Extract the calibration number, or label it "original"
+    calibration_id = coalesce(
+      str_extract(
+        spectralon_standard,
+        regex("calibration\\d+", ignore_case = TRUE)
+      ),
+      "original"
+    )
+  )
+  
+  
 
 write.csv(tp2_metadata_final, "TP2_reflectance_lookup.csv")
 
@@ -209,8 +270,36 @@ tp3_metadata_final <- tp3_meta %>%
     TP3_lookup,
     by = c("tank", "order_in_tank")
   ) %>%
-  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) # remove circled rows, these were bad scans 
-
+  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) %>% # remove circled rows, these were bad scans 
+  mutate(
+    # Use the calibration specified in notes, if present.
+    # Otherwise, default to the original standards for that tank.
+    spectralon_standard = coalesce(
+      str_extract(
+        notes,
+        regex("spectralon_tank\\d+(?:_calibration\\d+)?",
+              ignore_case = TRUE)
+      ),
+      paste0("spectralon_tank", tank)
+    ),
+    
+    # Match the skeleton standard to the Spectralon standard
+    skeleton_standard = str_replace(
+      spectralon_standard,
+      regex("^spectralon", ignore_case = TRUE),
+      "skeleton"
+    ),
+    
+    # Extract the calibration number, or label it "original"
+    calibration_id = coalesce(
+      str_extract(
+        spectralon_standard,
+        regex("calibration\\d+", ignore_case = TRUE)
+      ),
+      "original"
+    )
+  )
+  
 
 write.csv(tp3_metadata_final, "TP3_reflectance_lookup.csv")
 
@@ -222,8 +311,35 @@ tp4_metadata_final <- tp4_meta %>%
     TP4_lookup,
     by = c("tank", "order_in_tank")
   ) %>%
-  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) # remove circled rows, these were bad scans 
-
+  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) %>%# remove circled rows, these were bad scans 
+  mutate(
+    # Use the calibration specified in notes, if present.
+    # Otherwise, default to the original standards for that tank.
+    spectralon_standard = coalesce(
+      str_extract(
+        notes,
+        regex("spectralon_tank\\d+(?:_calibration\\d+)?",
+              ignore_case = TRUE)
+      ),
+      paste0("spectralon_tank", tank)
+    ),
+    
+    # Match the skeleton standard to the Spectralon standard
+    skeleton_standard = str_replace(
+      spectralon_standard,
+      regex("^spectralon", ignore_case = TRUE),
+      "skeleton"
+    ),
+    
+    # Extract the calibration number, or label it "original"
+    calibration_id = coalesce(
+      str_extract(
+        spectralon_standard,
+        regex("calibration\\d+", ignore_case = TRUE)
+      ),
+      "original"
+    )
+  )
 
 write.csv(tp4_metadata_final, "TP4_reflectance_lookup.csv")
 
@@ -236,8 +352,35 @@ tp5_metadata_final <- tp5_meta %>%
     TP5_lookup,
     by = c("tank", "order_in_tank")
   ) %>%
-  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) # remove circled rows, these were bad scans 
-
+  filter(is.na(notes) | !str_detect(notes, regex("circled", ignore_case = TRUE))) %>% # remove circled rows, these were bad scans 
+  mutate(
+    # Use the calibration specified in notes, if present.
+    # Otherwise, default to the original standards for that tank.
+    spectralon_standard = coalesce(
+      str_extract(
+        notes,
+        regex("spectralon_tank\\d+(?:_calibration\\d+)?",
+              ignore_case = TRUE)
+      ),
+      paste0("spectralon_tank", tank)
+    ),
+    
+    # Match the skeleton standard to the Spectralon standard
+    skeleton_standard = str_replace(
+      spectralon_standard,
+      regex("^spectralon", ignore_case = TRUE),
+      "skeleton"
+    ),
+    
+    # Extract the calibration number, or label it "original"
+    calibration_id = coalesce(
+      str_extract(
+        spectralon_standard,
+        regex("calibration\\d+", ignore_case = TRUE)
+      ),
+      "original"
+    )
+  )
 
 write.csv(tp5_metadata_final, "TP5_reflectance_lookup.csv")
 
