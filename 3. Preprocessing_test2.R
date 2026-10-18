@@ -121,7 +121,7 @@ spectra_long <- all_spectra %>%
 
 
 spectra_wide <- spectra_long %>%
-  select(fragment_ID, site, tank, treatment, timepoint, scan, wavelength, reflectance) %>%
+  select(fragment_ID, site, tank, treatment, timepoint, scan, skeleton_standard, wavelength, reflectance) %>%
   pivot_wider(
     names_from = wavelength,
     values_from = reflectance
@@ -145,7 +145,7 @@ spectra_wide <- spectra_long %>%
 # average triplicate scans per fragment: 
 spectra_avg <- spectra_long %>%
   group_by(
-    fragment_ID, site, tank, treatment, timepoint, wavelength
+    fragment_ID, site, tank, treatment, timepoint, skeleton_standard, wavelength
   ) %>%
   summarise(
     frag_avg = mean(reflectance, na.rm = TRUE),
@@ -492,6 +492,7 @@ svn_df_long %>%
 
 # Z-score Normalization (global SVN) ------------------------------------------
 
+
 zscore_spectra <- scale(avg_wide[, 6:1112], center = TRUE, scale = TRUE) # rescale data, creates a matrix
 
 
@@ -633,62 +634,57 @@ zscore_long %>%
 # lastly trying Rolo and Ryan's index: 
 
 ## Step 1: average the triplicate scans for frags and skeletons ---------------
-# we already did this above (lines 145-155)
-
-# but we are redoing this because we need to ensure that fragment scans are 
-# matchd to the right skeleton scans. 
+# we already did this above (lines 145-155), so can use the spectra_avg df
 
 
-
-
-
-
-## Step 2: z-score normalization for the skeleton scans as well? ---------------
-
-# remove spectralon: 
-spectra_avg2 <- spectra_avg %>%
+# first remove the spectralon only, we want to keep skeleton in for this 
+spectra_avg_RR <- spectra_avg %>%
   ungroup() %>%
   filter(
     !str_detect(
       str_to_lower(fragment_ID),
       "spectralon"
     )
-  )
+  ) %>%
+  filter(wavelength >= 350, wavelength <= 750) # also filter to only visible range
 
-# Keep only wavelengths from 350 to 750 nm
-spectra_avg2_350_750 <- spectra_avg2 %>%
-  filter(wavelength >= 350, wavelength <= 750)
 
-# Wide format
-avg_wide2 <- spectra_avg2_350_750 %>%
+
+# transform the df 
+avg_RR_wide <- spectra_avg_RR %>%
   pivot_wider(
-    id_cols = c(fragment_ID, site, tank, treatment, timepoint),
+    id_cols = c(fragment_ID, site, tank, treatment, timepoint, skeleton_standard),
     names_from = wavelength,
     values_from = frag_avg
   )
 
+
+
+## Step 2: z-score normalization for the skeleton scans as well? ---------------
+
+
 # Identify wavelength columns automatically
 metadata_cols <- c(
-  "fragment_ID", "site", "tank", "treatment", "timepoint"
+  "fragment_ID", "site", "tank", "treatment", "timepoint", "skeleton_standard"
 )
 
-wavelength_cols <- setdiff(names(avg_wide2), metadata_cols)
+wavelength_cols <- setdiff(names(avg_RR_wide), metadata_cols)
 
 # Z-score each wavelength across samples
-zscore_spectra2 <- scale(
-  as.matrix(avg_wide2[, wavelength_cols]),
+RR_zscore <- scale(
+  as.matrix(avg_RR_wide[, wavelength_cols]),
   center = TRUE,
   scale = TRUE
 )
 
 # Reattach metadata
-zscore_wide2 <- bind_cols(
-  avg_wide2 %>% select(all_of(metadata_cols)),
-  as.data.frame(zscore_spectra2)
+zscore_RR <- bind_cols(
+  avg_RR_wide %>% select(all_of(metadata_cols)),
+  as.data.frame(RR_zscore)
 )
 
 # Return to long format
-zscore_long2 <- zscore_wide2 %>%
+zscore_RR_long <- zscore_RR %>%
   pivot_longer(
     cols = all_of(wavelength_cols),
     names_to = "wavelength",
@@ -699,22 +695,34 @@ zscore_long2 <- zscore_wide2 %>%
 
 ## Step 3: create index (divide by skeleton and log transform) -----------------
 
-# isolate skeleton results 
-skeleton_ref <- zscore_long2 %>%
-  filter(str_detect(str_to_lower(fragment_ID), "^skeleton_tank")) %>%
+# Extract the skeleton spectra to use as a lookup table
+skeleton_lookup <- zscore_RR_long %>%
+  filter(str_detect(fragment_ID, "^skeleton_tank")) %>%
   select(
-    tank, timepoint, wavelength,
+    fragment_ID,
+    timepoint,
+    wavelength,
     skeleton_reflectance = reflectance
   )
 
-RR_index <- zscore_long2 %>%
-  filter(!str_detect(str_to_lower(fragment_ID), "^skeleton_tank")) %>%
+# Match each fragment to its assigned skeleton standard
+zscore_RR_long <- zscore_RR_long %>%
   left_join(
-    skeleton_ref,
-    by = c("tank", "timepoint", "wavelength")
+    skeleton_lookup,
+    by = c(
+      "skeleton_standard" = "fragment_ID",
+      "timepoint",
+      "wavelength"
+    )
   ) %>%
   mutate(
-    ratio = reflectance / skeleton_reflectance
+    fragment_skeleton_ratio = if_else(
+      !str_detect(fragment_ID, "^skeleton_tank") &
+        !is.na(skeleton_reflectance) &
+        skeleton_reflectance != 0,
+      reflectance / skeleton_reflectance,
+      NA_real_
+    )
   )
 
 # log ratio isn't going to work because there's too many negative values because 
@@ -722,12 +730,12 @@ RR_index <- zscore_long2 %>%
 
 ### plot z-score ratio: ------------------------------------------------
 
-RR_index %>%
+zscore_RR_long %>%
   filter(timepoint == 1) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = ratio,
+      y = fragment_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -750,7 +758,7 @@ RR_index %>%
   ggplot(
     aes(
       x = wavelength,
-      y = ratio,
+      y = fragment_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -772,7 +780,7 @@ RR_index %>%
   ggplot(
     aes(
       x = wavelength,
-      y = ratio,
+      y = fragment_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -794,7 +802,7 @@ RR_index %>%
   ggplot(
     aes(
       x = wavelength,
-      y = ratio,
+      y = fragment_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -817,7 +825,7 @@ RR_index %>%
   ggplot(
     aes(
       x = wavelength,
-      y = ratio,
+      y = fragment_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -835,37 +843,56 @@ RR_index %>%
 
 ## non z-scored data log transform: -------------------------------------------
 
-RR_index_nolog <- spectra_avg2
+# 1. Create a lookup table containing the averaged skeleton spectra
+skeleton_lookup2 <- spectra_avg_RR %>%
+  filter(str_detect(fragment_ID, "^skeleton_tank")) %>%
+  select(
+    fragment_ID,
+    timepoint,
+    wavelength,
+    skeleton_avg = frag_avg
+  )
+
 
 # Extract the skeleton reference spectra
-skeleton_ref <- RR_index_nolog %>%
+skeleton_ref <- spectra_avg_RR %>%
   filter(grepl("^skeleton_tank", fragment_ID)) %>%
   select(
     tank, timepoint, wavelength,
-    skeleton_reflectance = frag_avg
+    skeleton_avg = frag_avg
   )
 
-# Match each coral measurement to its tank/timepoint skeleton
-RR_index_nolog2 <- RR_index_nolog %>%
-  filter(!grepl("^skeleton_tank", fragment_ID)) %>%
+# 2. Match each fragment to its correct skeleton spectrum
+spectra_avg_RR <- spectra_avg_RR %>%
   left_join(
-    skeleton_ref,
-    by = c("tank", "timepoint", "wavelength")
+    skeleton_lookup2,
+    by = c(
+      "skeleton_standard" = "fragment_ID",
+      "timepoint",
+      "wavelength"
+    )
   ) %>%
   mutate(
-    log_ratio = log(frag_avg / skeleton_reflectance)
+    log_frag_skeleton_ratio = if_else(
+      !str_detect(fragment_ID, "^skeleton_tank") &
+        !is.na(skeleton_avg) &
+        !is.na(frag_avg) &
+        frag_avg > 0 &
+        skeleton_avg > 0,
+      log(frag_avg / skeleton_avg),
+      NA_real_
+    )
   )
-
 
 ### plot raw log transform: ----------------------------------------------------
 
 
-RR_index_nolog2 %>%
+spectra_avg_RR %>%
   filter(timepoint == 1) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = log_ratio,
+      y = log_frag_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -884,12 +911,12 @@ RR_index_nolog2 %>%
 
 
 
-RR_index_nolog2 %>%
+spectra_avg_RR %>%
   filter(timepoint == 2) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = log_ratio,
+      y = log_frag_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -907,12 +934,12 @@ RR_index_nolog2 %>%
 
 
 
-RR_index_nolog2 %>%
+spectra_avg_RR %>%
   filter(timepoint == 3) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = log_ratio,
+      y = log_frag_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -930,12 +957,12 @@ RR_index_nolog2 %>%
 
 
 
-RR_index_nolog2 %>%
+spectra_avg_RR %>%
   filter(timepoint == 4) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = log_ratio,
+      y = log_frag_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -954,12 +981,12 @@ RR_index_nolog2 %>%
 
 
 
-RR_index_nolog2 %>%
+spectra_avg_RR %>%
   filter(timepoint == 5) %>%
   ggplot(
     aes(
       x = wavelength,
-      y = log_ratio,
+      y = log_frag_skeleton_ratio,
       group = fragment_ID,
       color = fragment_ID
     )
@@ -1045,7 +1072,7 @@ ggplot(
   facet_wrap(~ treatment) +
   labs(
     title = "PCA of Coral Reflectance Spectra",
-    subtitle = "Raw reflectance, 350–750 nm",
+    subtitle = "Mean Centered reflectance, 350–750 nm",
     x = paste0(
       "PC1 (", round(var_explained[1], 1), "% variance)"
     ),
@@ -1099,268 +1126,269 @@ ggplot(
 
 ## z-scored RR ratio: -----------------------------------------------------
 
-# Prepare the data for PCA
-pca_ratio_wide <- RR_index %>%
-  filter(
-    !str_detect(str_to_lower(fragment_ID), "spectralon|skeleton"),
-    wavelength >= 350,
-    wavelength <= 750
-  ) %>%
-  select(
-    fragment_ID, site, tank, treatment, timepoint,
-    wavelength, ratio
-  ) %>%
-  pivot_wider(
-    id_cols = c(fragment_ID, site, tank, treatment, timepoint),
-    names_from = wavelength,
-    values_from = ratio
+
+# Helper function: reshape spectra, run PCA, and plot scores
+
+run_spectral_pca <- function(data, value_col, dataset_name) {
+  
+  # Keep coral fragments only; exclude skeleton reference scans
+  coral_data <- data %>%
+    filter(!str_detect(fragment_ID, "^skeleton_tank")) %>%
+    select(
+      fragment_ID, site, tank, treatment, timepoint,
+      wavelength, value = all_of(value_col)
+    )
+  
+  # Reshape: one row per fragment/timepoint, one column per wavelength
+  spectral_wide <- coral_data %>%
+    mutate(wavelength = paste0("wl_", wavelength)) %>%
+    pivot_wider(
+      id_cols = c(
+        fragment_ID, site, tank, treatment, timepoint
+      ),
+      names_from = wavelength,
+      values_from = value
+    )
+  
+  # Separate metadata from wavelength variables
+  metadata <- spectral_wide %>%
+    select(fragment_ID, site, tank, treatment, timepoint)
+  
+  spectral_matrix <- spectral_wide %>%
+    select(starts_with("wl_")) %>%
+    as.data.frame()
+  
+  # Retain observations with complete spectral data
+  keep <- complete.cases(spectral_matrix) &
+    apply(spectral_matrix, 1, function(x) all(is.finite(x)))
+  
+  metadata <- metadata[keep, , drop = FALSE]
+  spectral_matrix <- spectral_matrix[keep, , drop = FALSE]
+  
+  # Run PCA: center wavelengths but do not scale each wavelength
+  pca <- prcomp(
+    spectral_matrix,
+    center = TRUE,
+    scale. = FALSE
   )
-
-metadata_cols <- c(
-  "fragment_ID", "site", "tank", "treatment", "timepoint"
-)
-
-# Exclude metadata columns first
-candidate_wavelengths <- setdiff(
-  names(pca_ratio_wide),
-  metadata_cols
-)
-
-# Keep wavelengths between 350 and 750 nm
-wavelength_numbers <- as.numeric(candidate_wavelengths)
-
-wavelength_cols <- candidate_wavelengths[
-  !is.na(wavelength_numbers) &
-    wavelength_numbers >= 350 &
-    wavelength_numbers <= 750
-]
-
-# Check
-length(wavelength_cols)
-head(wavelength_cols)
-tail(wavelength_cols)
-
-# Create the matrix directly
-ratio_matrix <- as.matrix(
-  pca_ratio_wide[, wavelength_cols, drop = FALSE]
-)
-
-# Confirm it is a numeric matrix
-class(ratio_matrix)
-typeof(ratio_matrix)
-
-# Count missing or infinite values
-sum(!is.finite(ratio_matrix))
-
-
-
-# wavelength_cols <- setdiff(names(pca_ratio_wide), metadata_cols)
-# 
-# 
-# # Convert each wavelength column to numeric
-# pca_ratio_wide <- pca_ratio_wide %>%
-#   mutate(
-#     across(
-#       all_of(wavelength_cols),
-#       ~ as.numeric(as.character(.x))
-#     )
-#   )
-# 
-# # Create numeric matrix
-# ratio_matrix <- as.matrix(
-#   pca_ratio_wide[, wavelength_cols, drop = FALSE]
-# )
-# 
-# # Check the result
-# class(ratio_matrix)
-# typeof(ratio_matrix)
-
-# Number of coral samples before filtering
-nrow(ratio_matrix)
-
-# Number of samples with complete, finite spectra
-sum(apply(ratio_matrix, 1, function(x) all(is.finite(x))))
-
-# Number of samples being removed
-sum(!apply(ratio_matrix, 1, function(x) all(is.finite(x))))
-
-# Number of invalid values per sample
-invalid_per_sample <- rowSums(!is.finite(ratio_matrix))
-
-summary(invalid_per_sample)
-
-# Remove samples with missing or non-finite values
-keep <- apply(ratio_matrix, 1, function(x) all(is.finite(x)))
-
-ratio_matrix_clean <- ratio_matrix[keep, , drop = FALSE]
-ratio_metadata <- pca_ratio_wide[keep, metadata_cols]
-
-# Run PCA
-pca_ratio <- prcomp(
-  ratio_matrix_clean,
-  center = TRUE,
-  scale. = FALSE
-)
-
-# Calculate variance explained
-variance_ratio <- 100 * pca_ratio$sdev^2 /
-  sum(pca_ratio$sdev^2)
-
-# Combine PCA scores with sample metadata
-pca_ratio_scores <- bind_cols(
-  ratio_metadata,
-  as.data.frame(pca_ratio$x)
-)
-
-# Plot PC1 vs PC2
-ggplot(
-  pca_ratio_scores,
-  aes(
-    x = PC1,
-    y = PC2,
-    color = factor(timepoint)
+  
+  # Calculate variance explained
+  variance_explained <- 100 *
+    pca$sdev^2 / sum(pca$sdev^2)
+  
+  # Store PCA scores alongside coral metadata
+  scores <- bind_cols(
+    metadata,
+    as_tibble(pca$x)
   )
-) +
-  geom_point(alpha = 0.7, size = 2) +
-  facet_wrap(~ treatment) +
-  labs(
-    title = "PCA of Z-Scored Coral-to-Skeleton Ratios",
-    x = paste0("PC1 (", round(variance_ratio[1], 1), "%)"),
-    y = paste0("PC2 (", round(variance_ratio[2], 1), "%)"),
-    color = "Timepoint"
+  
+  # Plot the first two principal components
+  # Plot PC1 vs PC2, faceted by treatment
+  p <- ggplot(
+    scores,
+    aes(
+      x = PC1,
+      y = PC2,
+      color = factor(timepoint),
+      shape = factor(timepoint)
+    )
   ) +
-  theme_classic()
+    geom_point(size = 2.5, alpha = 0.8) +
+    facet_wrap(~ treatment) +
+    labs(
+      title = paste("PCA:", dataset_name),
+      x = paste0(
+        "PC1 (", round(variance_explained[1], 1), "%)"
+      ),
+      y = paste0(
+        "PC2 (", round(variance_explained[2], 1), "%)"
+      ),
+      color = "Timepoint",
+      shape = "Timepoint"
+    ) +
+    theme_classic(base_size = 13)
+  
+  print(p)
+  
+  return(list(
+    pca = pca,
+    scores = scores,
+    plot = p,
+    variance_explained = variance_explained,
+    n_excluded = sum(!keep)
+  ))
+}
 
+# run PCAs: 
 
+# A. Raw averaged reflectance
+pca_raw <- run_spectral_pca(
+  data = spectra_avg_RR,
+  value_col = "frag_avg",
+  dataset_name = "Raw averaged reflectance"
+)
 
-## Raw spectra log(RR index): ---------------------------------------------------
-
-# TP2 Tank 7 has multiple skeletons that i needed to redo so its all messed up. 
-# Need to load "tp2_metadata_final" from script 1 into enviornment to run this
-# code:
-
-library(stringr)
-
-# Create the skeleton reference lookup
-skeleton_ref <- spectra_avg2 %>%
-  filter(str_detect(str_to_lower(fragment_ID), "^skeleton_tank")) %>%
+# B. Log-transformed raw averaged reflectance
+spectra_avg_RR <- spectra_avg_RR %>%
   mutate(
-    calibration = str_extract(
-      fragment_ID,
-      "calibration\\d+"
-    ),
-    calibration = coalesce(calibration, "original")
-  ) %>%
-  select(
-    tank,
-    timepoint,
-    wavelength,
-    calibration,
-    skeleton_reflectance = frag_avg
+    log_frag_avg = if_else(
+      !is.na(frag_avg) & frag_avg > 0,
+      log(frag_avg),
+      NA_real_
+    )
   )
 
-# Prepare coral spectra and assign their calibration
-coral_spectra <- spectra_avg2 %>%
-  filter(!str_detect(str_to_lower(fragment_ID), "^skeleton_tank|^spectralon_tank")) %>%
-  left_join(
-    tp2_metadata_final %>%
-      select(fragment_ID, tank, reflectance_file, notes) %>%
-      distinct(),
-    by = c("fragment_ID", "tank")
-  ) %>%
+pca_log_raw <- run_spectral_pca(
+  data = spectra_avg_RR,
+  value_col = "log_frag_avg",
+  dataset_name = "Log-transformed raw reflectance"
+)
+
+# C. Z-scored spectra
+pca_zscore <- run_spectral_pca(
+  data = zscore_RR_long,
+  value_col = "reflectance",
+  dataset_name = "Z-scored reflectance"
+)
+
+# D. Ratio of z-scored fragment and skeleton spectra
+pca_zscore_ratio <- run_spectral_pca(
+  data = zscore_RR_long,
+  value_col = "fragment_skeleton_ratio",
+  dataset_name = "Ratio of z-scored spectra"
+)
+
+# E. Log-transformed averaged fragment-to-skeleton ratio
+pca_log_ratio <- run_spectral_pca(
+  data = spectra_avg_RR,
+  value_col = "log_frag_skeleton_ratio",
+  dataset_name = "Log fragment-to-skeleton ratio"
+)
+
+
+(pca_raw$plot | pca_log_raw$plot) /
+  (pca_zscore$plot | pca_zscore_ratio$plot) /
+  (pca_log_ratio$plot)
+
+
+
+
+
+# -------------- Compare PC2 results through time -----------------------------
+
+
+## Extract PC2 scores from each PCA ---------------------------
+pc2_mean_centered <- pca_raw$scores %>%
+  mutate(method = "Mean-centered")
+
+pc2_zscore <- pca_zscore$scores %>%
+  mutate(method = "Z-score")
+
+pc2_zscore_ratio <- pca_zscore_ratio$scores %>%
+  mutate(method = "Z-score ratio")
+
+pc2_log_ratio <- pca_log_ratio$scores %>%
+  mutate(method = "Raw log ratio")
+
+## Combine into one data frame 
+pc2_all <- bind_rows(
+  pc2_mean_centered,
+  pc2_zscore,
+  pc2_zscore_ratio,
+  pc2_log_ratio
+) %>%
   mutate(
-    calibration = str_extract(
-      notes,
-      "calibration\\d+"
-    ),
-    calibration = coalesce(calibration, "original")
+    timepoint = as.numeric(as.character(timepoint)),
+    method = factor(
+      method,
+      levels = c(
+        "Mean-centered",
+        "Z-score",
+        "Z-score ratio",
+        "Raw log ratio"
+      )
+    )
   )
 
-# Join each coral spectrum to its matching skeleton calibration
-RR_index_nolog2 <- coral_spectra %>%
-  left_join(
-    skeleton_ref,
-    by = c("tank", "timepoint", "wavelength", "calibration")
-  ) %>%
-  mutate(
-    log_ratio = log(frag_avg / skeleton_reflectance)
-  )
+# Check that the columns are present
+names(pc2_all)
+glimpse(pc2_all)
 
 
-
-
-
-
-
-# Prepare the data for PCA
-pca_logratio_wide <- RR_index_nolog2 %>%
-  filter(
-    !str_detect(str_to_lower(fragment_ID), "spectralon|skeleton"),
-    wavelength >= 350,
-    wavelength <= 750,
-    is.finite(log_ratio)
-  ) %>%
-  select(
-    fragment_ID, site, tank, treatment, timepoint,
-    wavelength, log_ratio
-  ) %>%
-  pivot_wider(
-    id_cols = c(fragment_ID, site, tank, treatment, timepoint),
-    names_from = wavelength,
-    values_from = log_ratio
-  )
-
-# Identify wavelength columns
-metadata_cols <- c(
-  "fragment_ID", "site", "tank", "treatment", "timepoint"
-)
-
-wavelength_cols <- setdiff(names(pca_logratio_wide), metadata_cols)
-
-# Convert to a numeric matrix
-logratio_matrix <- as.matrix(
-  pca_logratio_wide[, wavelength_cols]
-)
-storage.mode(logratio_matrix) <- "numeric"
-
-# Remove samples with missing or non-finite values
-keep <- apply(logratio_matrix, 1, function(x) all(is.finite(x)))
-
-logratio_matrix_clean <- logratio_matrix[keep, , drop = FALSE]
-logratio_metadata <- pca_logratio_wide[keep, metadata_cols]
-
-# Run PCA
-pca_logratio <- prcomp(
-  logratio_matrix_clean,
-  center = TRUE,
-  scale. = FALSE
-)
-
-# Calculate variance explained
-variance_logratio <- 100 * pca_logratio$sdev^2 /
-  sum(pca_logratio$sdev^2)
-
-# Combine scores with metadata
-pca_logratio_scores <- bind_cols(
-  logratio_metadata,
-  as.data.frame(pca_logratio$x)
-)
-
-# Plot PC1 vs PC2
+## Make plots: ---------------------------------------
 ggplot(
-  pca_logratio_scores,
-  aes(
-    x = PC1,
-    y = PC2,
-    color = factor(timepoint)
-  )
+  pc2_all,
+  aes(x = timepoint, y = PC2)
 ) +
-  geom_point(alpha = 0.7, size = 2) +
-  facet_wrap(~ treatment) +
-  labs(
-    title = "PCA of Log-Transformed Raw Coral-to-Skeleton Ratios",
-    x = paste0("PC1 (", round(variance_logratio[1], 1), "%)"),
-    y = paste0("PC2 (", round(variance_logratio[2], 1), "%)"),
-    color = "Timepoint"
+  geom_point(
+    aes(color = treatment),
+    alpha = 0.5,
+    position = position_jitter(width = 0.08, height = 0)
   ) +
-  theme_classic()
+  geom_smooth(
+    aes(group = 1),
+    method = "lm",
+    formula = y ~ x,
+    se = TRUE,
+    color = "black",
+    linewidth = 0.9
+  ) +
+  facet_wrap(~method, scales = "free_y") +
+  scale_x_continuous(
+    breaks = 1:5,
+    labels = paste0("TP", 1:5)
+  ) +
+  labs(
+    x = "Timepoint",
+    y = "PC2 score",
+    color = "Treatment",
+    title = "Temporal trends in PC2 across spectral preprocessing methods",
+    subtitle = "Black lines show linear regressions; shaded bands show 95% confidence intervals"
+  ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+pc2_models <- pc2_all %>%
+  group_by(method) %>%
+  nest() %>%
+  mutate(
+    model = map(data, ~ lm(PC2 ~ timepoint, data = .x)),
+    results = map(model, broom::tidy, conf.int = TRUE),
+    fit = map(model, broom::glance)
+  )
+
+# Regression coefficients, including slope and confidence interval
+pc2_regression_results <- pc2_models %>%
+  select(method, results) %>%
+  unnest(results) %>%
+  filter(term == "timepoint") %>%
+  select(
+    method,
+    slope = estimate,
+    std_error = std.error,
+    statistic = statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+# Model fit statistics
+pc2_fit_results <- pc2_models %>%
+  select(method, fit) %>%
+  unnest(fit) %>%
+  select(
+    method,
+    r_squared = r.squared,
+    adj_r_squared = adj.r.squared,
+    residual_sd = sigma,
+    n = nobs
+  )
+
+# Combine the results
+pc2_comparison <- pc2_regression_results %>%
+  left_join(pc2_fit_results, by = "method")
+
+pc2_comparison
