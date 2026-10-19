@@ -753,7 +753,7 @@ zscore_RR_long %>%
 
 
 
-RR_index %>%
+zscore_RR_long %>%
   filter(timepoint == 2) %>%
   ggplot(
     aes(
@@ -775,7 +775,7 @@ RR_index %>%
   theme(legend.position = "none")
 
 
-RR_index %>%
+zscore_RR_long %>%
   filter(timepoint == 3) %>%
   ggplot(
     aes(
@@ -797,7 +797,7 @@ RR_index %>%
   theme(legend.position = "none")
 
 
-RR_index %>%
+zscore_RR_long %>%
   filter(timepoint == 4) %>%
   ggplot(
     aes(
@@ -820,7 +820,7 @@ RR_index %>%
 
 
 
-RR_index %>%
+zscore_RR_long %>%
   filter(timepoint == 5) %>%
   ggplot(
     aes(
@@ -1392,3 +1392,226 @@ pc2_comparison <- pc2_regression_results %>%
   left_join(pc2_fit_results, by = "method")
 
 pc2_comparison
+
+
+# -------------------------- LMERs -------------------------------------------
+
+
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(broom.mixed)
+
+# Helper: select the nearest available wavelength for each target
+extract_key_wavelengths <- function(data, response_col,
+                                    target_wavelengths = c(415, 670)) {
+  
+  data %>%
+    mutate(
+      target_wavelength = map_dbl(
+        wavelength,
+        ~ target_wavelengths[
+          which.min(abs(target_wavelengths - .x))
+        ]
+      )
+    ) %>%
+    group_by(fragment_ID, tank, treatment, timepoint,
+             target_wavelength) %>%
+    slice_min(
+      abs(wavelength - target_wavelength),
+      n = 1,
+      with_ties = FALSE
+    ) %>%
+    ungroup() %>%
+    transmute(
+      fragment_ID,
+      tank = factor(tank),
+      treatment = factor(treatment),
+      timepoint = factor(timepoint, levels = 1:5),
+      wavelength = factor(
+        target_wavelength,
+        levels = c(415, 670),
+        labels = c("415 nm", "670 nm")
+      ),
+      reflectance = .data[[response_col]]
+    ) %>%
+    filter(is.finite(reflectance)) %>%
+    distinct(fragment_ID, tank, treatment, timepoint,
+             wavelength, .keep_all = TRUE)
+}
+
+
+## create the datasets: ---------------------------------------
+
+# 1. Raw reflectance
+dat_raw <- extract_key_wavelengths(
+  spectra_avg_RR,
+  response_col = "frag_avg"
+)
+
+# 2. Z-scored reflectance
+dat_zscore <- extract_key_wavelengths(
+  zscore_RR_long,
+  response_col = "reflectance"
+)
+
+# 3. Z-score ratio
+dat_zscore_ratio <- extract_key_wavelengths(
+  zscore_RR_long,
+  response_col = "fragment_skeleton_ratio"
+)
+
+# 4. Log skeleton ratio
+dat_log_ratio <- extract_key_wavelengths(
+  spectra_avg_RR,
+  response_col = "log_frag_skeleton_ratio"
+)
+
+
+## fit the models for both wavelengths: --------------------------------
+
+fit_wavelength_models <- function(data) {
+  
+  split(data, data$wavelength) %>%
+    map(function(d) {
+      
+      lmer(
+        reflectance ~ timepoint * treatment + (1 | tank),
+        data = d,
+        REML = TRUE
+      )
+      
+    })
+}
+
+models_raw         <- fit_wavelength_models(dat_raw)
+models_zscore      <- fit_wavelength_models(dat_zscore)
+models_zscore_ratio <- fit_wavelength_models(dat_zscore_ratio)
+models_log_ratio   <- fit_wavelength_models(dat_log_ratio)
+
+
+# example: 
+
+# Raw reflectance models
+summary(models_raw[["415 nm"]])
+anova(models_raw[["415 nm"]])
+
+summary(models_raw[["670 nm"]])
+anova(models_raw[["670 nm"]])
+
+# Log-ratio models
+summary(models_log_ratio[["415 nm"]])
+anova(models_log_ratio[["415 nm"]])
+
+
+## Extract estimated means for plotting TP1-TP5: 
+
+get_model_means <- function(model, method_name, wavelength_name) {
+  
+  emmeans(model, ~ timepoint * treatment) %>%
+    as.data.frame() %>%
+    mutate(
+      preprocessing = method_name,
+      wavelength = wavelength_name
+    )
+}
+
+means_raw <- imap_dfr(
+  models_raw,
+  ~ get_model_means(.x, "Raw reflectance", .y)
+)
+
+means_zscore <- imap_dfr(
+  models_zscore,
+  ~ get_model_means(.x, "Z-scored reflectance", .y)
+)
+
+means_zscore_ratio <- imap_dfr(
+  models_zscore_ratio,
+  ~ get_model_means(.x, "Z-score ratio", .y)
+)
+
+means_log_ratio <- imap_dfr(
+  models_log_ratio,
+  ~ get_model_means(.x, "Log skeleton ratio", .y)
+)
+
+all_model_means <- bind_rows(
+  means_raw,
+  means_zscore,
+  means_zscore_ratio,
+  means_log_ratio
+)
+
+
+## Extract estimated means for plotting TP1-TP5 ---------------------------
+
+get_model_means <- function(model, method_name, wavelength_name) {
+  
+  emmeans(model, ~ timepoint * treatment) %>%
+    as.data.frame() %>%
+    mutate(
+      preprocessing = method_name,
+      wavelength = wavelength_name
+    )
+}
+
+means_raw <- imap_dfr(
+  models_raw,
+  ~ get_model_means(.x, "Raw reflectance", .y)
+)
+
+means_zscore <- imap_dfr(
+  models_zscore,
+  ~ get_model_means(.x, "Z-scored reflectance", .y)
+)
+
+means_zscore_ratio <- imap_dfr(
+  models_zscore_ratio,
+  ~ get_model_means(.x, "Z-score ratio", .y)
+)
+
+means_log_ratio <- imap_dfr(
+  models_log_ratio,
+  ~ get_model_means(.x, "Log skeleton ratio", .y)
+)
+
+all_model_means <- bind_rows(
+  means_raw,
+  means_zscore,
+  means_zscore_ratio,
+  means_log_ratio
+)
+
+
+## plotting: -----------------------------------------------------------
+
+ggplot(
+  filter(all_model_means, preprocessing == "Raw reflectance"),
+  aes(
+    x = timepoint,
+    y = emmean,
+    color = treatment,
+    group = treatment
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymin = lower.CL, ymax = upper.CL),
+    width = 0.15
+  ) +
+  facet_wrap(~ wavelength, scales = "free_y") +
+  labs(
+    title = "Reflectance trajectories across bleaching timepoints",
+    x = "Timepoint",
+    y = "Estimated reflectance",
+    color = "Treatment"
+  ) +
+  theme_classic()
+
+
+## Coefficient Table: --------------------------------------------------------
+
+

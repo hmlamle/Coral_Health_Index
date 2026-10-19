@@ -428,7 +428,7 @@ ggplot(
 ## Method: Z-score normalizaiton 
 "ZSN addresses the outlier sensitivity of min-max normalization by standardizing data based on distributional statistics rather than extreme values. This ensures mean-centered, unit-variance distributions while mitigating biases from unknown minima/maxima or singularities (e.g., spectroscopic scatter effects)." (Yan 2025)
 
-```{r z score ratio plots}
+```{r z score plots}
 zscore_spectra <- scale(avg_wide[, 6:1112], center = TRUE, scale = TRUE) # rescale data, creates a matrix
 
 
@@ -824,7 +824,7 @@ But let's run a PCA anyways:
 
 ### Z scored fragment/skeleton ratio PCA: 
 
-```{r z score ratio plots}
+```{r z score ratio pca}
 # Helper function: reshape spectra, run PCA, and plot scores
 run_spectral_pca <- function(data, value_col, dataset_name) {
   
@@ -927,7 +927,7 @@ pca_zscore_ratio <- run_spectral_pca(
 ## Method: Log(fragment/skeleton):
 
 
-```{r log ratio pca}
+```{r log ratio plots}
 ## non z-scored data log transform: -------------------------------------------
 
 # 1. Create a lookup table containing the averaged skeleton spectra
@@ -1107,21 +1107,45 @@ pca_log_ratio <- run_spectral_pca(
 # Compare best fit of PC2 scores through time for each preprocessing method: 
 For all of the four options shown above, it appears that the PC2 axis is holding information relevant to the bleaching response of the fragment. Let's compare how well each of the preprocessing methods through time explains the variation in PC2 scores.
 
+
+
+
 ```{r pc2 plots}
-## Extract PC2 scores from each PCA ---------------------------
-pc2_mean_centered <- pca_raw$scores %>%
-  mutate(method = "Mean-centered")
 
-pc2_zscore <- pca_zscore$scores %>%
-  mutate(method = "Z-score")
+# 1. Mean-centered PCA
+pc2_mean_centered <- pca_scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    timepoint = as.character(timepoint),
+    method = "Mean-centered"
+  )
 
+# 2. Z-score PCA
+pc2_zscore <- pca_z_scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    timepoint = as.character(timepoint),
+    method = "Z-score"
+  )
+
+# 3. Z-score ratio PCA
 pc2_zscore_ratio <- pca_zscore_ratio$scores %>%
-  mutate(method = "Z-score ratio")
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    timepoint = as.character(timepoint),
+    method = "Z-score ratio"
+  )
 
+# 4. Log ratio PCA
 pc2_log_ratio <- pca_log_ratio$scores %>%
-  mutate(method = "Raw log ratio")
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    timepoint = as.character(timepoint),
+    method = "Raw log ratio"
+  )
 
-## Combine into one data frame 
+
+# Combine all four methods
 pc2_all <- bind_rows(
   pc2_mean_centered,
   pc2_zscore,
@@ -1129,7 +1153,7 @@ pc2_all <- bind_rows(
   pc2_log_ratio
 ) %>%
   mutate(
-    timepoint = as.numeric(as.character(timepoint)),
+    timepoint = as.numeric(timepoint),
     method = factor(
       method,
       levels = c(
@@ -1141,12 +1165,14 @@ pc2_all <- bind_rows(
     )
   )
 
-# Check that the columns are present
+
+# Check the resulting data
 names(pc2_all)
 glimpse(pc2_all)
 
 
-## Make plots: ---------------------------------------
+## Plot PC2 through time -------------------------------------------
+
 ggplot(
   pc2_all,
   aes(x = timepoint, y = PC2)
@@ -1181,6 +1207,9 @@ ggplot(
     strip.text = element_text(face = "bold"),
     panel.grid.minor = element_blank()
   )
+
+
+## Fit a separate linear model for each method ---------------------
 
 pc2_models <- pc2_all %>%
   group_by(method) %>%
@@ -1223,6 +1252,5 @@ pc2_comparison <- pc2_regression_results %>%
   left_join(pc2_fit_results, by = "method")
 
 pc2_comparison
-
 ```
 
