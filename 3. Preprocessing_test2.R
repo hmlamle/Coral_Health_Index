@@ -25,10 +25,6 @@ tp3_metadata_final <- read.csv("TP3_reflectance_lookup.csv")
 tp4_metadata_final <- read.csv("TP4_reflectance_lookup.csv")
 tp5_metadata_final <- read.csv("TP5_reflectance_lookup.csv")
 
-
-
-
-
 # Load Data using MAP: -----------------------------------------
 
 ## function to load the data from the text files: 
@@ -97,16 +93,16 @@ tp1_spectra <- tp1_spectra %>%
   mutate(timepoint = 1)
 
 tp2_spectra <- tp2_spectra %>%
-  mutate(timepoint = 2)
+  mutate(timepoint = 6)
 
 tp3_spectra <- tp3_spectra %>%
-  mutate(timepoint = 3)
+  mutate(timepoint = 13)
 
 tp4_spectra <- tp4_spectra %>%
-  mutate(timepoint = 4)
+  mutate(timepoint = 17)
 
 tp5_spectra <- tp5_spectra %>%
-  mutate(timepoint = 5)
+  mutate(timepoint = 21)
 
 all_spectra <- bind_rows(
   tp1_spectra,
@@ -115,6 +111,7 @@ all_spectra <- bind_rows(
   tp4_spectra,
   tp5_spectra
 )
+
 
 spectra_long <- all_spectra %>%
   unnest(spectrum)
@@ -258,7 +255,7 @@ mcn_long %>%
 
 
 mcn_long %>%
-  filter(timepoint == 2) %>%
+  filter(timepoint == 6) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -280,7 +277,7 @@ mcn_long %>%
 
 
 mcn_long %>%
-  filter(timepoint == 3) %>%
+  filter(timepoint == 13) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -302,7 +299,7 @@ mcn_long %>%
 
 
 mcn_long %>%
-  filter(timepoint == 4) %>%
+  filter(timepoint == 17) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -324,7 +321,7 @@ mcn_long %>%
 
 
 mcn_long %>%
-  filter(timepoint == 5) %>%
+  filter(timepoint == 21) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -398,7 +395,7 @@ svn_df_long %>%
 
 
 svn_df_long %>%
-  filter(timepoint == 2) %>%
+  filter(timepoint == 6) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -420,7 +417,7 @@ svn_df_long %>%
 
 
 svn_df_long %>%
-  filter(timepoint == 3) %>%
+  filter(timepoint == 13) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -442,7 +439,7 @@ svn_df_long %>%
 
 
 svn_df_long %>%
-  filter(timepoint == 4) %>%
+  filter(timepoint == 17) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -464,7 +461,7 @@ svn_df_long %>%
 
 
 svn_df_long %>%
-  filter(timepoint == 5) %>%
+  filter(timepoint == 21) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -542,7 +539,7 @@ zscore_long %>%
 
 
 zscore_long %>%
-  filter(timepoint == 2) %>%
+  filter(timepoint == 6) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -564,7 +561,7 @@ zscore_long %>%
 
 
 zscore_long %>%
-  filter(timepoint == 3) %>%
+  filter(timepoint == 13) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -586,7 +583,7 @@ zscore_long %>%
 
 
 zscore_long %>%
-  filter(timepoint == 4) %>%
+  filter(timepoint == 17) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -608,7 +605,7 @@ zscore_long %>%
 
 
 zscore_long %>%
-  filter(timepoint == 5) %>%
+  filter(timepoint == 21) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -754,7 +751,7 @@ zscore_RR_long %>%
 
 
 zscore_RR_long %>%
-  filter(timepoint == 2) %>%
+  filter(timepoint == 6) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -776,7 +773,7 @@ zscore_RR_long %>%
 
 
 zscore_RR_long %>%
-  filter(timepoint == 3) %>%
+  filter(timepoint == 13) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -798,7 +795,7 @@ zscore_RR_long %>%
 
 
 zscore_RR_long %>%
-  filter(timepoint == 4) %>%
+  filter(timepoint == 17) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -821,7 +818,7 @@ zscore_RR_long %>%
 
 
 zscore_RR_long %>%
-  filter(timepoint == 5) %>%
+  filter(timepoint == 21) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -912,7 +909,7 @@ spectra_avg_RR %>%
 
 
 spectra_avg_RR %>%
-  filter(timepoint == 2) %>%
+  filter(timepoint == 6) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -935,7 +932,7 @@ spectra_avg_RR %>%
 
 
 spectra_avg_RR %>%
-  filter(timepoint == 3) %>%
+  filter(timepoint == 13) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -958,7 +955,7 @@ spectra_avg_RR %>%
 
 
 spectra_avg_RR %>%
-  filter(timepoint == 4) %>%
+  filter(timepoint == 17) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -982,7 +979,7 @@ spectra_avg_RR %>%
 
 
 spectra_avg_RR %>%
-  filter(timepoint == 5) %>%
+  filter(timepoint == 21) %>%
   ggplot(
     aes(
       x = wavelength,
@@ -1010,8 +1007,6 @@ spectra_avg_RR %>%
 # How are the time point 1 fragments clustering within each treatment using 
 # the different preprocessing methods? 
 
-
-## Mean centering normalization --------------------------------------------
 # Step 1: Filter wavelength range and transform to wide format 
 pca_wide <- spectra_avg_clean %>%
   filter(wavelength >= 350, wavelength <= 750) %>%
@@ -1040,28 +1035,30 @@ keep <- complete.cases(spectral_matrix) &
 pca_metadata <- pca_wide[keep, metadata_cols]
 spectral_matrix <- spectral_matrix[keep, , drop = FALSE]
 
-# Step 4: Run PCA
-pca_raw <- prcomp(
+
+## Mean centering normalization --------------------------------------------
+
+
+#  Run PCA
+pca_mcn <- prcomp(
   spectral_matrix,
   center = TRUE,
   scale. = FALSE
 )
 
 # Step 5: Combine PCA scores with metadata
-pca_scores <- bind_cols(
+pca_scores_mcn <- bind_cols(
   pca_metadata,
-  as.data.frame(pca_raw$x[, 1:2])
+  as.data.frame(pca_mcn$x[, 1:2])
 ) %>%
   mutate(
     timepoint = factor(timepoint),
     treatment = factor(treatment)
   )
 
-# Calculate variance explained by each PC
-var_explained <- summary(pca_raw)$importance[2, ] * 100
 
 ggplot(
-  pca_scores,
+  pca_scores_mcn,
   aes(
     x = PC1,
     y = PC2,
@@ -1168,7 +1165,7 @@ run_spectral_pca <- function(data, value_col, dataset_name) {
   # Run PCA: center wavelengths but do not scale each wavelength
   pca <- prcomp(
     spectral_matrix,
-    center = TRUE,
+    center = FALSE,
     scale. = FALSE
   )
   
@@ -1213,6 +1210,7 @@ run_spectral_pca <- function(data, value_col, dataset_name) {
   return(list(
     pca = pca,
     scores = scores,
+    spectral_matrix = as.matrix(spectral_matrix),
     plot = p,
     variance_explained = variance_explained,
     n_excluded = sum(!keep)
@@ -1244,12 +1242,6 @@ pca_log_raw <- run_spectral_pca(
   dataset_name = "Log-transformed raw reflectance"
 )
 
-# C. Z-scored spectra
-pca_zscore <- run_spectral_pca(
-  data = zscore_RR_long,
-  value_col = "reflectance",
-  dataset_name = "Z-scored reflectance"
-)
 
 # D. Ratio of z-scored fragment and skeleton spectra
 pca_zscore_ratio <- run_spectral_pca(
@@ -1267,28 +1259,215 @@ pca_log_ratio <- run_spectral_pca(
 
 
 (pca_raw$plot | pca_log_raw$plot) /
-  (pca_zscore$plot | pca_zscore_ratio$plot) /
-  (pca_log_ratio$plot)
+  (pca_zscore_ratio$plot | pca_log_ratio$plot) 
+  
 
 
 
 
 
-# -------------- Compare PC2 results through time -----------------------------
+# -------------- Compare PC axes through time -----------------------------
+# PC1: ---------------------------------------------------------
+
+### Extract PC scores: -------------------------------------------
+# 1. Mean-centered PCA
+pc1_mean_centered <- pca_scores_mcn %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC1) %>%
+  mutate(
+    method = "Mean-centered"
+  )
+
+# 2. Z-score PCA
+pc1_zscore <- pca_z_scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC1) %>%
+  mutate(
+    method = "Z-score"
+  )
+
+# 3. Z-score ratio PCA
+pc1_zscore_ratio <- pca_zscore_ratio$scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC1) %>%
+  mutate(
+    method = "Z-score ratio"
+  )
+
+# 4. Log ratio PCA
+pc1_log_ratio <- pca_log_ratio$scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC1) %>%
+  mutate(
+    method = "Raw log ratio"
+  )
 
 
+# Make timepoint numeric in all four datasets first
+pc1_mean_centered <- pc1_mean_centered %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc1_zscore <- pc1_zscore %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc1_zscore_ratio <- pc1_zscore_ratio %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc1_log_ratio <- pc1_log_ratio %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+
+# Now combine all four methods
+pc1_all <- bind_rows(
+  pc1_mean_centered,
+  pc1_zscore,
+  pc1_zscore_ratio,
+  pc1_log_ratio
+) %>%
+  mutate(
+    method = factor(
+      method,
+      levels = c(
+        "Mean-centered",
+        "Z-score",
+        "Z-score ratio",
+        "Raw log ratio"
+      )
+    )
+  )
+
+
+# Check the resulting data
+names(pc1_all)
+glimpse(pc1_all)
+
+
+## Plot PC1 through time -------------------------------------------
+
+ggplot(
+  pc1_all,
+  aes(
+    x = timepoint,
+    y = PC1,
+    color = treatment,
+    group = treatment
+  )
+) +
+  geom_point(
+    alpha = 0.5,
+    position = position_jitter(width = 0.08, height = 0)
+  ) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    se = TRUE,
+    linewidth = 0.9
+  ) +
+  facet_wrap(~method, scales = "free_y") +
+  labs(
+    x = "Timepoint",
+    y = "PC1 score",
+    color = "Treatment",
+    title = "Temporal trends in PC1 by treatment and preprocessing method",
+    subtitle = "Separate linear regressions for control, +2°C, and +4°C; shaded bands show 95% confidence intervals"
+  ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+
+## Fit a separate linear model for each method ---------------------
+
+pc1_models <- pc1_all %>%
+  group_by(method) %>%
+  nest() %>%
+  mutate(
+    model = map(data, ~ lm(PC1 ~ timepoint, data = .x)),
+    results = map(model, broom::tidy, conf.int = TRUE),
+    fit = map(model, broom::glance)
+  )
+
+# Regression coefficients, including slope and confidence interval
+pc1_regression_results <- pc1_models %>%
+  select(method, results) %>%
+  unnest(results) %>%
+  filter(term == "timepoint") %>%
+  select(
+    method,
+    slope = estimate,
+    std_error = std.error,
+    statistic = statistic,
+    p_value = p.value,
+    conf_low = conf.low,
+    conf_high = conf.high
+  )
+
+# Model fit statistics
+pc1_fit_results <- pc1_models %>%
+  select(method, fit) %>%
+  unnest(fit) %>%
+  select(
+    method,
+    r_squared = r.squared,
+    adj_r_squared = adj.r.squared,
+    residual_sd = sigma,
+    n = nobs
+  )
+
+# Combine the results
+pc1_comparison <- pc1_regression_results %>%
+  left_join(pc1_fit_results, by = "method")
+
+pc1_comparison
+
+
+
+
+
+
+## PC2: -----------------------------------------------------
 ## Extract PC2 scores from each PCA ---------------------------
-pc2_mean_centered <- pca_raw$scores %>%
-  mutate(method = "Mean-centered")
 
-pc2_zscore <- pca_zscore$scores %>%
-  mutate(method = "Z-score")
+# 1. Mean-centered PCA
+pc2_mean_centered <- pca_scores_mcn %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    method = "Mean-centered"
+  )
 
+# 2. Z-score PCA
+pc2_zscore <- pca_z_scores %>%
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    method = "Z-score"
+  )
+
+# 3. Z-score ratio PCA
 pc2_zscore_ratio <- pca_zscore_ratio$scores %>%
-  mutate(method = "Z-score ratio")
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    method = "Z-score ratio"
+  )
 
+# 4. Log ratio PCA
 pc2_log_ratio <- pca_log_ratio$scores %>%
-  mutate(method = "Raw log ratio")
+  select(fragment_ID, site, tank, treatment, timepoint, PC2) %>%
+  mutate(
+    method = "Raw log ratio"
+  )
+
+
+# Make timepoint numeric in all four datasets first
+pc2_mean_centered <- pc2_mean_centered %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc2_zscore <- pc2_zscore %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc2_zscore_ratio <- pc2_zscore_ratio %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
+pc2_log_ratio <- pc2_log_ratio %>%
+  mutate(timepoint = as.numeric(as.character(timepoint)))
+
 
 ## Combine into one data frame 
 pc2_all <- bind_rows(
@@ -1298,7 +1477,6 @@ pc2_all <- bind_rows(
   pc2_log_ratio
 ) %>%
   mutate(
-    timepoint = as.numeric(as.character(timepoint)),
     method = factor(
       method,
       levels = c(
@@ -1318,32 +1496,30 @@ glimpse(pc2_all)
 ## Make plots: ---------------------------------------
 ggplot(
   pc2_all,
-  aes(x = timepoint, y = PC2)
+  aes(
+    x = timepoint,
+    y = PC2,
+    color = treatment,
+    group = treatment
+  )
 ) +
   geom_point(
-    aes(color = treatment),
     alpha = 0.5,
     position = position_jitter(width = 0.08, height = 0)
   ) +
   geom_smooth(
-    aes(group = 1),
     method = "lm",
     formula = y ~ x,
     se = TRUE,
-    color = "black",
     linewidth = 0.9
   ) +
   facet_wrap(~method, scales = "free_y") +
-  scale_x_continuous(
-    breaks = 1:5,
-    labels = paste0("TP", 1:5)
-  ) +
   labs(
     x = "Timepoint",
     y = "PC2 score",
     color = "Treatment",
-    title = "Temporal trends in PC2 across spectral preprocessing methods",
-    subtitle = "Black lines show linear regressions; shaded bands show 95% confidence intervals"
+    title = "Temporal trends in PC2 by treatment and preprocessing method",
+    subtitle = "Separate linear regressions for control, +2°C, and +4°C; shaded bands show 95% confidence intervals"
   ) +
   theme_bw() +
   theme(
@@ -1392,6 +1568,158 @@ pc2_comparison <- pc2_regression_results %>%
   left_join(pc2_fit_results, by = "method")
 
 pc2_comparison
+
+
+
+## PC Loadings: --------------------------------------------------------------
+
+# function to extract pc loadings for each preprocessing method: 
+get_pc_correlations <- function(spectral_matrix, pca_fit, method_name) {
+  
+  # Correlate each wavelength with PC1 and PC2 scores
+  pc_cor <- cor(
+    spectral_matrix,
+    pca_fit$x[, 1:2, drop = FALSE]
+  )
+  
+  as.data.frame(pc_cor) %>%
+    rownames_to_column("wavelength") %>%
+    rename(
+      PC1_correlation = PC1,
+      PC2_correlation = PC2
+    ) %>%
+    mutate(
+      wavelength = as.numeric(wavelength),
+      method = method_name,
+      PC1_selected = abs(PC1_correlation) >= 0.5,
+      PC2_selected = abs(PC2_correlation) >= 0.5
+    )
+}
+
+### MCN: ----------------------------------------------
+
+loadings_mean_centered <- get_pc_correlations(
+  spectral_matrix = spectral_matrix,
+  pca_fit = pca_mcn,
+  method_name = "Mean-centered"
+)
+
+
+
+# Extract PC1 and PC2 eigenvector coefficients
+pca_coefficients_mcn <- as.data.frame(
+  pca_mcn$rotation[, 1:2]
+) %>%
+  tibble::rownames_to_column("wavelength") %>%
+  rename(
+    PC1_loading = PC1,
+    PC2_loading = PC2
+  ) %>%
+  mutate(wavelength = as.numeric(wavelength))
+
+head(pca_coefficients_mcn)
+
+pca_coefficients_mcn %>%
+  pivot_longer(
+    cols = c(PC1_loading, PC2_loading),
+    names_to = "PC",
+    values_to = "loading"
+  ) %>%
+  ggplot(aes(x = wavelength, y = loading)) +
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~PC, ncol = 1) +
+  labs(
+    title = "MSN PC Loadings",
+    x = "Wavelength (nm)",
+    y = "PCA eigenvector coefficient"
+  ) +
+  theme_classic()
+
+
+### ZSN: ----------------------------------------------
+
+loadings_z_score <- get_pc_correlations(
+  spectral_matrix = spectral_matrix,
+  pca_fit = pca_zscore,
+  method_name = "z-score"
+)
+
+
+
+# Extract PC1 and PC2 eigenvector coefficients
+pca_coefficients_zscore <- as.data.frame(
+  pca_zscore$rotation[, 1:2]
+) %>%
+  tibble::rownames_to_column("wavelength") %>%
+  rename(
+    PC1_loading = PC1,
+    PC2_loading = PC2
+  ) %>%
+  mutate(wavelength = as.numeric(wavelength))
+
+head(pca_coefficients_zscore)
+
+pca_coefficients_zscore %>%
+  pivot_longer(
+    cols = c(PC1_loading, PC2_loading),
+    names_to = "PC",
+    values_to = "loading"
+  ) %>%
+  ggplot(aes(x = wavelength, y = loading)) +
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~PC, ncol = 1) +
+  labs(
+    title = "ZSN PC Loadings",
+    x = "Wavelength (nm)",
+    y = "PCA eigenvector coefficient"
+  ) +
+  theme_classic()
+
+
+
+### Z-scored ratio: ---------------------------------------------------------
+
+loadings_zscore_ratio <- get_pc_correlations(
+  spectral_matrix = pca_zscore_ratio$spectral_matrix,
+  pca_fit = pca_zscore_ratio$pca,
+  method_name = "Z-score ratio"
+)
+
+
+
+# Extract PC1 and PC2 eigenvector coefficients
+pca_coefficients_zscore <- as.data.frame(
+  pca_zscore$rotation[, 1:2]
+) %>%
+  tibble::rownames_to_column("wavelength") %>%
+  rename(
+    PC1_loading = PC1,
+    PC2_loading = PC2
+  ) %>%
+  mutate(wavelength = as.numeric(wavelength))
+
+head(pca_coefficients_zscore)
+
+pca_coefficients_zscore %>%
+  pivot_longer(
+    cols = c(PC1_loading, PC2_loading),
+    names_to = "PC",
+    values_to = "loading"
+  ) %>%
+  ggplot(aes(x = wavelength, y = loading)) +
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~PC, ncol = 1) +
+  labs(
+    title = "ZSN PC Loadings",
+    x = "Wavelength (nm)",
+    y = "PCA eigenvector coefficient"
+  ) +
+  theme_classic()
+
+
 
 
 # -------------------------- LMERs -------------------------------------------
@@ -1612,6 +1940,107 @@ ggplot(
   theme_classic()
 
 
+ggplot(
+  filter(all_model_means, preprocessing == "Z-scored reflectance"),
+  aes(
+    x = timepoint,
+    y = emmean,
+    color = treatment,
+    group = treatment
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymin = lower.CL, ymax = upper.CL),
+    width = 0.15
+  ) +
+  facet_wrap(~ wavelength, scales = "free_y") +
+  labs(
+    title = "Z-score trajectories across bleaching timepoints",
+    x = "Timepoint",
+    y = "Estimated reflectance",
+    color = "Treatment"
+  ) +
+  theme_classic()
+
+
+ggplot(
+  filter(all_model_means, preprocessing == "Z-score ratio"),
+  aes(
+    x = timepoint,
+    y = emmean,
+    color = treatment,
+    group = treatment
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymin = lower.CL, ymax = upper.CL),
+    width = 0.15
+  ) +
+  facet_wrap(~ wavelength, scales = "free_y") +
+  labs(
+    title = "Z-score ratio trajectories across bleaching timepoints",
+    x = "Timepoint",
+    y = "Estimated reflectance",
+    color = "Treatment"
+  ) +
+  theme_classic()
+
+
+ggplot(
+  filter(all_model_means, preprocessing == "Log skeleton ratio"),
+  aes(
+    x = timepoint,
+    y = emmean,
+    color = treatment,
+    group = treatment
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymin = lower.CL, ymax = upper.CL),
+    width = 0.15
+  ) +
+  facet_wrap(~ wavelength, scales = "free_y") +
+  labs(
+    title = "Raw log ratio trajectories across bleaching timepoints",
+    x = "Timepoint",
+    y = "Estimated reflectance",
+    color = "Treatment"
+  ) +
+  theme_classic()
+
 ## Coefficient Table: --------------------------------------------------------
 
+extract_coefficients <- function(model_list, method_name) {
+  
+  imap_dfr(model_list, function(model, wavelength_name) {
+    
+    broom.mixed::tidy(
+      model,
+      effects = "fixed",
+      conf.int = TRUE
+    ) %>%
+      mutate(
+        preprocessing = method_name,
+        wavelength = wavelength_name
+      )
+  })
+}
 
+coefficient_table <- bind_rows(
+  extract_coefficients(models_raw, "Raw reflectance"),
+  extract_coefficients(models_zscore, "Z-scored reflectance"),
+  extract_coefficients(models_zscore_ratio, "Z-score ratio"),
+  extract_coefficients(models_log_ratio, "Log skeleton ratio")
+) %>%
+  select(
+    preprocessing, wavelength, term,
+    estimate, std.error, conf.low, conf.high, p.value
+  )
+
+coefficient_table
